@@ -1,5 +1,6 @@
 package Dao;
 
+import exceptions.MyException;
 import model.Patient;
 
 import java.util.List;

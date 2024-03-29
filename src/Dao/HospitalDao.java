@@ -16,5 +16,5 @@ public interface HospitalDao {
 
     String deleteHospitalById(Long id);
 
-    Map<String, List<Hospital>> getAllHospitalByAddress(String address);
+    Map<String, Hospital> getAllHospitalByAddress(String address);
 }

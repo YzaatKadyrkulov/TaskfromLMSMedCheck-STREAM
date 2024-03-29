@@ -69,7 +69,9 @@ public class Hospital {
     public void setPatients(List<Patient> patients) {
         this.patients = patients;
     }
-
+  public void setDepartment(Department department){
+        departments.add(department);
+  }
     @Override
     public String toString() {
         return "\nHospital{" +

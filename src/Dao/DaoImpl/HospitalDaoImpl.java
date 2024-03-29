@@ -6,10 +6,9 @@ import exceptions.MyException;
 import model.Hospital;
 import model.Patient;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class HospitalDaoImpl implements HospitalDao {
     @Override
@@ -20,80 +19,55 @@ public class HospitalDaoImpl implements HospitalDao {
 
     @Override
     public Hospital findHospitalById(Long id) {
-        try {
-            for (Hospital hospital : DataBase.hospitals) {
-                if (hospital.getId().equals(id)) {
-                    return hospital;
-                }
-            }
-            throw new MyException("The given name " + id + " is not correct\nTry again");
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
+        return DataBase.hospitals.stream()
+                .filter(hospital -> hospital.getId().equals(id))
+                .findFirst().orElseThrow(() -> new RuntimeException("The hospital not found"));
     }
 
     @Override
     public List<Hospital> getAllHospital() {
-        return DataBase.hospitals;
+        return new ArrayList<>(DataBase.hospitals);
     }
 
     @Override
     public List<Patient> getAllPatientFromHospital(Long id) {
-        try {
-            for (Hospital hospital : new ArrayList<>(DataBase.hospitals)) {
-                if (hospital.getId().equals(id)) {
-                    return hospital.getPatients();
-                } else {
-                    throw new MyException("The given " + id + " is not correct\nTry again");
-                }
-            }
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
+        List<Patient> patients = DataBase.hospitals.stream()
+                .filter(hospital -> hospital.getId().equals(id))
+                .flatMap(hospital -> hospital.getPatients().stream())
+                .collect(Collectors.toList());
+
+        if (patients.isEmpty()) {
+            throw new RuntimeException("No patients found in the hospital with ID " + id);
         }
-        return null;
+
+        return patients;
     }
 
     @Override
     public String deleteHospitalById(Long id) {
-        try {
-            for (Hospital hospital : new ArrayList<>(DataBase.hospitals)) {
-                if (hospital.getId().equals(id)) {
-                    DataBase.hospitals.remove(hospital);
-                    return "Successfully removed";
-                }
-            }
-            throw new MyException("The given " + id + " is not correct\nTry again");
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
+        Optional<Hospital> optionalHospital = DataBase.hospitals.stream()
+                .filter(hospital -> hospital.getId().equals(id))
+                .findFirst();
+
+        if (optionalHospital.isPresent()) {
+            Hospital hospital = optionalHospital.get();
+            DataBase.hospitals.remove(hospital);
+            return "Hospital with ID " + id + " deleted successfully";
+        } else {
+            throw new RuntimeException("Hospital with ID " + id + " not found");
         }
-        return "";
     }
 
     @Override
-    public Map<String, List<Hospital>> getAllHospitalByAddress(String address) {
-        Map<String, List<Hospital>> hospitalsByAddress = new HashMap<>();
-        boolean isHospitalExists = false;
+    public Map<String, Hospital> getAllHospitalByAddress(String address) {
+          try {
+              return DataBase.hospitals.stream()
+                      .filter(hospital -> hospital.getAddress().equals(address))
+                      .collect(Collectors.toMap(Hospital::getAddress, hospital -> hospital, (existing, replacement) -> existing));
+          }catch (NullPointerException e){
+              System.err.println("An error occurred while processing hospitals: " + e.getMessage());
+              return new HashMap<>();
+          }
 
-        try {
-            if (!DataBase.hospitals.isEmpty()) {
-                for (Hospital hospital : DataBase.hospitals) {
-                    if (hospital.getAddress().equalsIgnoreCase(address)) {
-                        if (!hospitalsByAddress.containsKey(hospital.getAddress())) {
-                            hospitalsByAddress.put(hospital.getAddress(), new ArrayList<>());
-                        }
-                        hospitalsByAddress.get(hospital.getAddress()).add(hospital);
-                        isHospitalExists = true;
-                    }
-                }
-                if (!isHospitalExists) {
-                    throw new MyException("The hospital with address " + address + " not found!");
-                }
-            }
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
-        }
-        return hospitalsByAddress;
     }
-
 }

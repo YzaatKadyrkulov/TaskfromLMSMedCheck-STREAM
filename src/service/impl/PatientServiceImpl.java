@@ -2,6 +2,7 @@ package service.impl;
 
 import Dao.DaoImpl.PatientDaoImpl;
 import Dao.PatientDao;
+import exceptions.MyException;
 import model.Patient;
 import service.GenericService;
 import service.PatientService;

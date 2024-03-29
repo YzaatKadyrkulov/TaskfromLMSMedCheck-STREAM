@@ -3,135 +3,118 @@ package Dao.DaoImpl;
 import Dao.PatientDao;
 import Database.DataBase;
 import exceptions.MyException;
+import model.Department;
 import model.Hospital;
 import model.Patient;
 
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class PatientDaoImpl implements PatientDao<Patient> {
     @Override
     public String addPatientsToHospital(Long id, List<Patient> patients) {
-        boolean hospitalFound = false;
-        try {
-            for (Hospital hospital : DataBase.hospitals) {
-                if (hospital.getId().equals(id)) {
+//        Optional<Hospital> optionalHospital = DataBase.hospitals.stream()
+//                .filter(hospital -> hospital.getId().equals(id))
+//                .findFirst();
+//        if (optionalHospital.isPresent()) {
+//            optionalHospital.get().getPatients().addAll(patients);
+//            return "Successfully added";
+//        } else throw new RuntimeException("The hospital by " + id + " not found");
+//    }
+        return DataBase.hospitals.stream()
+                .filter(hospital -> hospital.getId().equals(id))
+                .findFirst()
+                .map(hospital -> {
                     hospital.getPatients().addAll(patients);
-                    hospitalFound = true;
                     return "Successfully added";
-                }
-            }
-            if (!hospitalFound) {
-                throw new MyException("Hospital with id " + id + " not found.");
-            }
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
-        }
-        return "Not successfully added";
+                })
+                .orElseThrow(() -> new RuntimeException("The hospital by " + id + " not found"));
     }
 
-    @Override
+
     public Patient getPatientById(Long id) {
         try {
-            for (Hospital hospital : DataBase.hospitals) {
-                for (Patient patient : hospital.getPatients()) {
-                    if (patient.getId().equals(id)) {
-                        return patient;
-                    } else {
-                        throw new MyException("The patient " + id + " not found\nTry again");
-                    }
-                }
-            }
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
+            Optional<Patient> optionalPatient = DataBase.hospitals.stream()
+                    .flatMap(hospital -> hospital.getPatients().stream())
+                    .filter(patient -> patient.getId().equals(id))
+                    .findFirst();
+
+            return optionalPatient.orElseThrow(() -> new IllegalArgumentException("Patient with id " + id + " not found"));
+        } catch (Exception e) {
+            return null;
         }
-        return null;
     }
 
     @Override
     public Map<Integer, Patient> getPatientByAge(int age) {
         try {
-            Map<Integer, Patient> patientsByAge = new HashMap<>();
-
-            for (Hospital hospital : DataBase.hospitals) {
-                for (Patient patient : hospital.getPatients()) {
-                    if (patient.getAge() == age) {
-                        patientsByAge.put(patient.getAge(), patient);
-                        return patientsByAge;
-                    }
-                }
-            }
-            throw new MyException("The given " + age + " is not correct");
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
+            return DataBase.hospitals.stream()
+                    .flatMap(hospital -> hospital.getPatients().stream())
+                    .filter(patient -> patient.getAge() == age)
+                    .collect(Collectors.toMap(Patient::getAge, Function.identity()));
+        } catch (Exception e) {
+//            throw new MyException("An error occurred while processing patients: " + e.getMessage());
         }
         return null;
     }
 
-    @Override
     public List<Patient> sortPatientsByAge(String ascOrDesc) {
-        List<Patient> sortedPatients = new ArrayList<>();
         try {
-            for (Hospital hospital : DataBase.hospitals) {
-                if (ascOrDesc.equalsIgnoreCase("asc")) {
-                    hospital.getPatients().sort(Comparator.comparing(Patient::getAge));
-                } else if (ascOrDesc.equalsIgnoreCase("desc")) {
-                    hospital.getPatients().sort(Comparator.comparing(Patient::getAge).reversed());
-                } else {
-                    throw new MyException("The  " + ascOrDesc + " not found\nTry again");
-                }
-                sortedPatients.addAll(hospital.getPatients());
-
+            if (!ascOrDesc.equalsIgnoreCase("asc") && !ascOrDesc.equalsIgnoreCase("desc")) {
+                throw new MyException("The " + ascOrDesc + " not found\nTry again");
             }
+
+            Comparator<Patient> comparator = Comparator.comparing(Patient::getAge);
+            if (ascOrDesc.equalsIgnoreCase("desc")) {
+                comparator = comparator.reversed();
+            }
+
+            return DataBase.hospitals.stream()
+                    .flatMap(hospital -> hospital.getPatients().stream())
+                    .sorted(comparator)
+                    .collect(Collectors.toList());
         } catch (MyException e) {
             System.out.println(e.getMessage());
+            return Collections.emptyList();
         }
-        return sortedPatients;
     }
 
     @Override
+
     public String add(Long hospitalId, Patient patient) {
         try {
-            for (Hospital hospital : DataBase.hospitals) {
-                if (hospital.getId().equals(hospitalId)) {
-                    List<Patient> patients = hospital.getPatients();
-                    if (patients == null) {
-                        patients = new ArrayList<>();
-                        hospital.setPatients(patients);
-                    }
-                    patients.add(patient);
-                    return patients + " added successfully ";
-                } else {
-                    throw new MyException("The hospital " + hospitalId + " not found\nTry again");
+            Optional<Hospital> optionalHospital = DataBase.hospitals.stream()
+                    .filter(hospital -> hospital.getId().equals(hospitalId))
+                    .findFirst();
+
+            if (optionalHospital.isPresent()) {
+                Hospital hospital = optionalHospital.get();
+                List<Patient> patients = hospital.getPatients();
+                if (patients == null) {
+                    patients = new ArrayList<>();
+                    hospital.setPatients(patients);
                 }
+                patients.add(patient);
+                return patient + " added successfully ";
+            } else {
+                throw new MyException("The hospital " + hospitalId + " not found\nTry again");
             }
         } catch (MyException e) {
             System.out.println(e.getMessage());
+            return "Not correct";
         }
-        return "Not correct";
     }
 
     @Override
     public void removeById(Long id) {
-        boolean exitFromPatient = false;
         try {
-            for (Hospital hospital : DataBase.hospitals) {
-                Iterator<Patient> iterator = hospital.getPatients().iterator();
-                while (iterator.hasNext()) {
-                    Patient patient = iterator.next();
-                    if (patient.getId().equals(id)) {
-                        iterator.remove();
-                        System.out.println("Patient with ID " + id + " removed from hospital " + hospital.getId());
-                        exitFromPatient = true;
-                        break;
-                    }
-                }
-                if (exitFromPatient) {
-                    break;
-                }
-            }
-            if (!exitFromPatient) {
-                throw new MyException("Tne given " + id + " is not correct");
+            boolean patientRemoved = DataBase.hospitals.stream()
+                    .anyMatch(hospital -> hospital.getPatients().removeIf(patient -> patient.getId().equals(id)));
+
+            if (!patientRemoved) {
+                throw new MyException("The given " + id + " is not correct");
             }
         } catch (MyException e) {
             System.out.println(e.getMessage());
@@ -140,27 +123,23 @@ public class PatientDaoImpl implements PatientDao<Patient> {
 
     @Override
     public String updateById(Long id, Patient patient) {
-        boolean patientFound = false;
         try {
-            for (Hospital hospital : DataBase.hospitals) {
-                for (Patient patient1 : hospital.getPatients()) {
-                    if (patient1.getId().equals(id)) {
+            boolean patientFound = DataBase.hospitals.stream()
+                    .flatMap(hospital -> hospital.getPatients().stream())
+                    .filter(patient1 -> patient1.getId().equals(id))
+                    .peek(patient1 -> {
                         patient1.setFirstName(patient.getFirstName());
                         patient1.setLastName(patient.getLastName());
                         patient1.setGender(patient.getGender());
                         patient1.setAge(patient.getAge());
-                        patientFound = true;
-                        break;
-                    }
-                }
-                if (patientFound) {
-                    break;
-                }
-            }
+                    })
+                    .findFirst()
+                    .isPresent();
+
             if (!patientFound) {
                 throw new MyException("The patient " + id + " not found\nTry again");
             }
-            return " Changed successfully";
+            return "Changed successfully";
         } catch (MyException e) {
             return e.getMessage();
         }
