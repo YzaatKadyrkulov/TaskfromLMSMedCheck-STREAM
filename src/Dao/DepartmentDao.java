@@ -1,5 +1,6 @@
 package Dao;
 
+import exceptions.MyException;
 import model.Department;
 
 import java.util.List;

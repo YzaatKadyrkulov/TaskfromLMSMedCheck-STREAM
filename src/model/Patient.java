@@ -62,7 +62,7 @@ public class Patient {
 
     @Override
     public String toString() {
-        return "Patient{" +
+        return "\nPatient{" +
                 "id=" + id +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +

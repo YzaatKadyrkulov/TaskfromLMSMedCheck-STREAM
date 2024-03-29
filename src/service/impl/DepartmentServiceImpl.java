@@ -2,6 +2,7 @@ package service.impl;
 
 import Dao.DaoImpl.DepartmentDaoImpl;
 import Dao.DepartmentDao;
+import exceptions.MyException;
 import model.Department;
 import service.DepartmentService;
 

@@ -16,5 +16,5 @@ public interface HospitalService {
 
     String deleteHospitalById(Long id);
 
-    Map<String, Hospital> getAllHospitalByAddress(String address);
+    Map<String, List<Hospital>> getAllHospitalByAddress(String address);
 }

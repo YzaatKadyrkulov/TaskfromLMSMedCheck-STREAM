@@ -42,7 +42,7 @@ public class Department {
 
     @Override
     public String toString() {
-        return "Department{" +
+        return "\nDepartment{" +
                 "id=" + id +
                 ", departmentName='" + departmentName + '\'' +
                 ", doctors=" + doctors +

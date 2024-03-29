@@ -1,5 +1,6 @@
 package service;
 
+import exceptions.MyException;
 import model.Department;
 
 import java.util.List;

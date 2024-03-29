@@ -38,7 +38,7 @@ public class HospitalServiceImpl implements HospitalService{
     }
 
     @Override
-    public Map<String, Hospital> getAllHospitalByAddress(String address) {
+    public Map<String, List<Hospital>> getAllHospitalByAddress(String address) {
         return hospitalDao.getAllHospitalByAddress(address);
     }
 }

@@ -19,12 +19,12 @@ public class PatientServiceImpl implements PatientService<Patient> {
 
     @Override
     public void removeById(Long id) {
-   patientDao.removeById(id);
+        patientDao.removeById(id);
     }
 
     @Override
     public String updateById(Long id, Patient patient) {
-        return patientDao.updateById(id,patient);
+        return patientDao.updateById(id, patient);
     }
 
     @Override
@@ -38,8 +38,8 @@ public class PatientServiceImpl implements PatientService<Patient> {
     }
 
     @Override
-    public Map<Integer, Patient> getPatientByAge() {
-        return patientDao.getPatientByAge();
+    public Map<Integer, Patient> getPatientByAge(int age) {
+        return patientDao.getPatientByAge(age);
     }
 
     @Override

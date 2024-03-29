@@ -4,6 +4,7 @@ import Dao.DepartmentDao;
 import Database.DataBase;
 import exceptions.MyException;
 import model.Department;
+import model.Doctor;
 import model.Hospital;
 import service.GenericService;
 
@@ -33,13 +34,13 @@ public class DepartmentDaoImpl implements DepartmentDao<Department> {
     public Department findDepartmentByName(String name) {
         try {
             for (Hospital hospital : DataBase.hospitals) {
-                for (Department department : hospital.getDepartments())
+                for (Department department : hospital.getDepartments()) {
                     if (department.getDepartmentName().equals(name)) {
                         return department;
-                    } else {
-                        throw new MyException("The given name " + name + " is not correct\nTry again");
                     }
+                }
             }
+            throw new MyException("The given name " + name + " is not correct\nTry again");
         } catch (MyException e) {
             System.out.println(e.getMessage());
         }
@@ -58,11 +59,9 @@ public class DepartmentDaoImpl implements DepartmentDao<Department> {
                     }
                     departments.add(department);
                     return "Department added successfully " + departments;
-                } else {
-                    throw new MyException("The department " + hospitalId + " not found\nTry again");
                 }
             }
-
+            throw new MyException("The department not found\nTry again");
         } catch (MyException e) {
             System.out.println(e.getMessage());
         }
@@ -80,11 +79,11 @@ public class DepartmentDaoImpl implements DepartmentDao<Department> {
                         iterator.remove();
                         System.out.println("Department with ID " + id + " removed from hospital " + hospital.getId());
                         break;
-                    } else {
-                        throw new MyException("The department " + id + " not found\nTry again");
+
                     }
                 }
             }
+            throw new MyException("The department " + id + " not found\nTry again");
         } catch (MyException e) {
             System.out.println(e.getMessage());
         }

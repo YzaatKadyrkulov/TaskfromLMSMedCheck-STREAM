@@ -7,6 +7,7 @@ import model.Hospital;
 import model.Patient;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,13 +21,12 @@ public class HospitalDaoImpl implements HospitalDao {
     @Override
     public Hospital findHospitalById(Long id) {
         try {
-            for (Hospital hospital : new ArrayList<>(DataBase.hospitals)) {
+            for (Hospital hospital : DataBase.hospitals) {
                 if (hospital.getId().equals(id)) {
                     return hospital;
-                } else {
-                    throw new MyException("The given name " + id + " is not correct\nTry again");
                 }
             }
+            throw new MyException("The given name " + id + " is not correct\nTry again");
         } catch (MyException e) {
             System.out.println(e.getMessage());
         }
@@ -60,31 +60,40 @@ public class HospitalDaoImpl implements HospitalDao {
             for (Hospital hospital : new ArrayList<>(DataBase.hospitals)) {
                 if (hospital.getId().equals(id)) {
                     DataBase.hospitals.remove(hospital);
-                } else {
-                    throw new MyException("The given " + id + " is not correct\nTry again");
+                    return "Successfully removed";
                 }
             }
+            throw new MyException("The given " + id + " is not correct\nTry again");
         } catch (MyException e) {
             System.out.println(e.getMessage());
         }
-        return "Successfully removed";
+        return "";
     }
 
     @Override
-    public Map<String, Hospital> getAllHospitalByAddress(String address) {
+    public Map<String, List<Hospital>> getAllHospitalByAddress(String address) {
+        Map<String, List<Hospital>> hospitalsByAddress = new HashMap<>();
+        boolean isHospitalExists = false;
+
         try {
-            for (Hospital hospital : new ArrayList<>(DataBase.hospitals)) {
-                if (hospital.getAddress().equals(address)) {
-                    System.out.println(hospital);
-                } else {
-                    throw new MyException("The given " + address + " is not correct\nTry again");
+            if (!DataBase.hospitals.isEmpty()) {
+                for (Hospital hospital : DataBase.hospitals) {
+                    if (hospital.getAddress().equalsIgnoreCase(address)) {
+                        if (!hospitalsByAddress.containsKey(hospital.getAddress())) {
+                            hospitalsByAddress.put(hospital.getAddress(), new ArrayList<>());
+                        }
+                        hospitalsByAddress.get(hospital.getAddress()).add(hospital);
+                        isHospitalExists = true;
+                    }
+                }
+                if (!isHospitalExists) {
+                    throw new MyException("The hospital with address " + address + " not found!");
                 }
             }
         } catch (MyException e) {
             System.out.println(e.getMessage());
         }
-        return null;
+        return hospitalsByAddress;
     }
+
 }
-
-

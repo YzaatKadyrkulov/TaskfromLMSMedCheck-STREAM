@@ -10,7 +10,7 @@ public interface PatientService<T> {
 
     Patient getPatientById(Long id);
 
-    Map<Integer, Patient> getPatientByAge();
+    Map<Integer, Patient> getPatientByAge(int age);
 
     List<Patient> sortPatientsByAge(String ascOrDesc);
     String add(Long hospitalId, T t);

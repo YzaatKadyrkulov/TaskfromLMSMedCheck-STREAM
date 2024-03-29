@@ -3,39 +3,33 @@ package Dao.DaoImpl;
 import Dao.PatientDao;
 import Database.DataBase;
 import exceptions.MyException;
-import model.Doctor;
 import model.Hospital;
 import model.Patient;
-import service.GenericService;
+
 
 import java.util.*;
 
 public class PatientDaoImpl implements PatientDao<Patient> {
-        @Override
-        public String addPatientsToHospital(Long id, List<Patient> patients) {
-            try {
-                boolean hospitalFound = false;
-                for (Hospital hospital : DataBase.hospitals) {
-                    if (hospital.getId().equals(id)) {
-                        hospitalFound = true;
-                        List<Patient> hospitalPatients = hospital.getPatients();
-                        if (patients.isEmpty()) {
-                            hospitalPatients.addAll(patients);
-                        } else {
-                            throw new MyException("No patients provided to add.");
-                        }
-                        break;
-                    }
+    @Override
+    public String addPatientsToHospital(Long id, List<Patient> patients) {
+        boolean hospitalFound = false;
+        try {
+            for (Hospital hospital : DataBase.hospitals) {
+                if (hospital.getId().equals(id)) {
+                    hospital.getPatients().addAll(patients);
+                    hospitalFound = true;
+                    return "Successfully added";
                 }
-                if (!hospitalFound) {
-                    throw new MyException("Hospital with id " + id + " not found.");
-                }
-            } catch (MyException e) {
-                System.out.println(e.getMessage());
-                return "Successfully added";
             }
-            return "Successfully added";
+            if (!hospitalFound) {
+                throw new MyException("Hospital with id " + id + " not found.");
+            }
+        } catch (MyException e) {
+            System.out.println(e.getMessage());
         }
+        return "Not successfully added";
+    }
+
     @Override
     public Patient getPatientById(Long id) {
         try {
@@ -55,18 +49,21 @@ public class PatientDaoImpl implements PatientDao<Patient> {
     }
 
     @Override
-    public Map<Integer, Patient> getPatientByAge() {
-        Map<Integer, List<Patient>> patientsByAge = new HashMap<>();
+    public Map<Integer, Patient> getPatientByAge(int age) {
+        try {
+            Map<Integer, Patient> patientsByAge = new HashMap<>();
 
-        for (Hospital hospital : DataBase.hospitals) {
-            for (Patient patient : hospital.getPatients()) {
-                Integer age = patient.getAge();
-
-                List<Patient> patientsWithSameAge = patientsByAge.getOrDefault(age, new ArrayList<>());
-                patientsWithSameAge.add(patient);
-                patientsByAge.put(age, patientsWithSameAge);
-                System.out.println(patientsByAge);
+            for (Hospital hospital : DataBase.hospitals) {
+                for (Patient patient : hospital.getPatients()) {
+                    if (patient.getAge() == age) {
+                        patientsByAge.put(patient.getAge(), patient);
+                        return patientsByAge;
+                    }
+                }
             }
+            throw new MyException("The given " + age + " is not correct");
+        } catch (MyException e) {
+            System.out.println(e.getMessage());
         }
         return null;
     }
@@ -76,11 +73,10 @@ public class PatientDaoImpl implements PatientDao<Patient> {
         List<Patient> sortedPatients = new ArrayList<>();
         try {
             for (Hospital hospital : DataBase.hospitals) {
-                Comparator<Patient> sortPatientsByAge = Comparator.comparing(Patient::getAge);
                 if (ascOrDesc.equalsIgnoreCase("asc")) {
-                    Collections.sort(hospital.getPatients(), sortPatientsByAge);
+                    hospital.getPatients().sort(Comparator.comparing(Patient::getAge));
                 } else if (ascOrDesc.equalsIgnoreCase("desc")) {
-                    Collections.sort(hospital.getPatients(), sortPatientsByAge.reversed());
+                    hospital.getPatients().sort(Comparator.comparing(Patient::getAge).reversed());
                 } else {
                     throw new MyException("The  " + ascOrDesc + " not found\nTry again");
                 }
@@ -99,12 +95,12 @@ public class PatientDaoImpl implements PatientDao<Patient> {
             for (Hospital hospital : DataBase.hospitals) {
                 if (hospital.getId().equals(hospitalId)) {
                     List<Patient> patients = hospital.getPatients();
-                    if(patients == null){
+                    if (patients == null) {
                         patients = new ArrayList<>();
                         hospital.setPatients(patients);
                     }
                     patients.add(patient);
-                    return patients +" added successfully ";
+                    return patients + " added successfully ";
                 } else {
                     throw new MyException("The hospital " + hospitalId + " not found\nTry again");
                 }
@@ -117,6 +113,7 @@ public class PatientDaoImpl implements PatientDao<Patient> {
 
     @Override
     public void removeById(Long id) {
+        boolean exitFromPatient = false;
         try {
             for (Hospital hospital : DataBase.hospitals) {
                 Iterator<Patient> iterator = hospital.getPatients().iterator();
@@ -125,16 +122,22 @@ public class PatientDaoImpl implements PatientDao<Patient> {
                     if (patient.getId().equals(id)) {
                         iterator.remove();
                         System.out.println("Patient with ID " + id + " removed from hospital " + hospital.getId());
+                        exitFromPatient = true;
                         break;
-                    } else {
-                        throw new MyException("The Patient " + id + " not found\nTry again");
                     }
                 }
+                if (exitFromPatient) {
+                    break;
+                }
+            }
+            if (!exitFromPatient) {
+                throw new MyException("Tne given " + id + " is not correct");
             }
         } catch (MyException e) {
             System.out.println(e.getMessage());
         }
     }
+
     @Override
     public String updateById(Long id, Patient patient) {
         boolean patientFound = false;

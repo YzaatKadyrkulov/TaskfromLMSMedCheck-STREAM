@@ -21,11 +21,10 @@ public class DoctorDaoImpl implements DoctorDao<Doctor> {
                 for (Doctor doctor : hospital.getDoctors()) {
                     if (doctor.getId().equals(id)) {
                         return doctor;
-                    } else {
-                        throw new MyException("The given " + id + " is not correct\nTry again");
                     }
                 }
             }
+            throw new MyException("The given " + id + " is not correct\nTry again");
         } catch (MyException e) {
             System.out.println(e.getMessage());
         }
@@ -65,7 +64,7 @@ public class DoctorDaoImpl implements DoctorDao<Doctor> {
         for (Hospital hospital : DataBase.hospitals) {
             if (hospital.getId().equals(id)) {
                 return hospital.getDoctors();
-            }else{
+            } else {
                 System.out.println("Mistake:");
             }
         }
@@ -80,11 +79,10 @@ public class DoctorDaoImpl implements DoctorDao<Doctor> {
                 for (Department department : hospital.getDepartments()) {
                     if (department.getId().equals(id)) {
                         return department.getDoctors();
-                    } else {
-                        throw new MyException("The given " + id + " is not correct\nTry again");
                     }
                 }
             }
+            throw new MyException("The given " + id + " is not correct\nTry again");
         } catch (MyException e) {
             System.out.println(e.getMessage());
         }
@@ -103,10 +101,9 @@ public class DoctorDaoImpl implements DoctorDao<Doctor> {
                     }
                     hospitals.add(doctor);
                     return "Doctor added successfully " + hospitals;
-                } else {
-                    throw new MyException("The  " + hospitalId + " not found\nTry again");
                 }
             }
+            throw new MyException("The  " + hospitalId + " not found\nTry again");
 
         } catch (MyException e) {
             System.out.println(e.getMessage());

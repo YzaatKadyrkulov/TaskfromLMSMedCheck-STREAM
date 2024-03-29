@@ -72,7 +72,7 @@ public class Hospital {
 
     @Override
     public String toString() {
-        return "Hospital{" +
+        return "\nHospital{" +
                 "id=" + id +
                 ", hospitalName='" + hospitalName + '\'' +
                 ", address='" + address + '\'' +
