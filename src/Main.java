@@ -449,6 +449,8 @@ public class Main {
                                                                 gender = Gender.MALE.name();
                                                             } else if (gender.equalsIgnoreCase(Gender.FEMALE.name())) {
                                                                 gender = Gender.FEMALE.name();
+                                                            }else{
+                                                                throw new MyException("Write MALE/FEMALE: ");
                                                             }
                                                             patients.add(new Patient(GeneratedId.genPatientId(), firstName, lastName, patientAge, gender));
                                                         }
