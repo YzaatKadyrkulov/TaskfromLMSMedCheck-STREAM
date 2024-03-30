@@ -93,15 +93,15 @@ public class Main {
         DepartmentService<Department> departmentService = new DepartmentServiceImpl();
         PatientService<Patient> patientService = new PatientServiceImpl();
 
-            while (true) {
-                System.out.println("""
-                        1.Hospital
-                        2.Department
-                        3.Doctor
-                        4.Patient
-                        5.Exit
-                        """);
-try{
+        while (true) {
+            System.out.println("""
+                    1.Hospital
+                    2.Department
+                    3.Doctor
+                    4.Patient
+                    5.Exit
+                    """);
+            try {
                 int choice = new Scanner(System.in).nextInt();
                 boolean isTrue = false;
                 while (!isTrue) {
@@ -242,7 +242,7 @@ try{
                                 }
                             }
                             break;
-                        case 3:
+                            case 3:
                             boolean exitFromDoctor = false;
                             while (!exitFromDoctor) {
                                 System.out.println("""
@@ -347,153 +347,151 @@ try{
                                         exitFromDoctor = true;
                                     }
                                 }
-                            }
-                            break;
-                        case 4:
-                            boolean exitFromPatient = false;
-                            while (!exitFromPatient) {
-                                System.out.println("""
-                                        1.Add patient by id hospital to hospital
-                                        2.Remove the patient inside the hospital, with the id of the patient 
-                                        3.Update the patient inside the hospital, with the id of the patient
-                                        4.add Patients by id hospital To Hospital
-                                        5.get Patient By Id
-                                        6.get Patient By Age
-                                        7.sort Patients By Age
-                                        8.Exit""");
-
-                                switch (new Scanner(System.in).nextInt()) {
-                                    case 1 -> {
-                                        System.out.println("Write the id of the hospital: ");
-                                        Long hospitalId = new Scanner(System.in).nextLong();
-
-                                        System.out.println("Write the patient's first name: ");
-                                        String firstName = new Scanner(System.in).nextLine();
-
-                                        System.out.println("Write the patient's  last name: ");
-                                        String lastName = new Scanner(System.in).nextLine();
-
-                                        System.out.println("Write the patient's  MALE/FEMALE: ");
-                                        String gender = new Scanner(System.in).nextLine();
-
-                                        System.out.println("Write the patient's age: ");
-                                        int patientAge = new Scanner(System.in).nextInt();
-
-                                        if (gender.equalsIgnoreCase(Gender.MALE.name())) {
-                                            gender = Gender.MALE.name();
-                                        } else if (gender.equalsIgnoreCase(Gender.FEMALE.name())) {
-                                            gender = Gender.FEMALE.name();
-                                        } else {
-                                            throw new MyException("The given " + gender + " is not correct");
-                                        }
-
-                                        Patient patient = new Patient(GeneratedId.genPatientId(), firstName, lastName, patientAge, gender);
-                                        System.out.println(patientService.add(hospitalId, patient));
-                                    }
-                                    case 2 -> {
-                                        System.out.println("Write the id of the patient: ");
-                                        Long idPatient = new Scanner(System.in).nextLong();
-                                        patientService.removeById(idPatient);
-                                    }
-                                    case 3 -> {
-                                        System.out.println("Write the id of the patient: ");
-                                        Long departmentId = new Scanner(System.in).nextLong();
-
-                                        System.out.println("Write a new patient's first name: ");
-                                        String doctorName = new Scanner(System.in).nextLine();
-
-                                        System.out.println("Write a new patient's name: ");
-                                        String doctorLastName = new Scanner(System.in).nextLine();
-
-                                        System.out.println("Write a new patient's MALE/FEMALE: ");
-                                        String gender = new Scanner(System.in).nextLine();
-
-                                        System.out.println("Write a new patient's age: ");
-                                        int age = new Scanner(System.in).nextInt();
-
-                                        Patient patient = new Patient();
-
-                                        patient.setId(departmentId);
-                                        patient.setFirstName(doctorName);
-                                        patient.setLastName(doctorLastName);
-                                        patient.setGender(gender);
-                                        patient.setAge(age);
-
-                                        System.out.println(patientService.updateById(departmentId, patient));
-                                    }
-                                    case 4 -> {
-                                        System.out.println("Write the id of the hospital: ");
-                                        Long idHospital = new Scanner(System.in).nextLong();
-
-                                        List<Patient> patients = new ArrayList<>();
-
-                                        System.out.println("Enter the number of patients to add: ");
-                                        int numOfPatients = new Scanner(System.in).nextInt();
-
-                                        for (int i = 0; i < numOfPatients; i++) {
-                                            System.out.println("Enter patient details(id,firstName,lastName,gender,patientAge) for patient: ");
-
-                                            System.out.println("Write the patient's first name: " + (i + 1) + ":");
-                                            String firstName = new Scanner(System.in).nextLine();
-
-                                            System.out.println("Write the patient's  last name: " + (i + 1) + ":");
-                                            String lastName = new Scanner(System.in).nextLine();
-
-                                            System.out.println("Write the patient's  MALE/FEMALE: " + (i + 1) + ":");
-                                            String gender = new Scanner(System.in).nextLine();
-
-                                            System.out.println("Write the patient's age: " + (i + 1) + ":");
-                                            int patientAge = new Scanner(System.in).nextInt();
-
-                                            if (gender.equalsIgnoreCase(Gender.MALE.name())) {
-                                                gender = Gender.MALE.name();
-                                            } else if (gender.equalsIgnoreCase(Gender.FEMALE.name())) {
-                                                gender = Gender.FEMALE.name();
-                                            } else {
-                                                throw new MyException("Write MALE/FEMALE: ");
-                                            }
-                                            patients.add(new Patient(GeneratedId.genPatientId(), firstName, lastName, patientAge, gender));
-                                        }
-
-                                        String result = patientService.addPatientsToHospital(idHospital, patients);
-                                        System.out.println(result);
-                                    }
-                                    case 5 -> {
-                                        System.out.println("Write patient's id");
-                                        Long id = new Scanner(System.in).nextLong();
-
-                                        System.out.println(patientService.getPatientById(id));
-                                    }
-                                    case 6 -> {
-                                        System.out.println("Write patient's age: ");
-                                        int age = new Scanner(System.in).nextInt();
-                                        System.out.println(patientService.getPatientByAge(age));
-                                    }
-                                    case 7 -> {
-                                        System.out.println("Write the asc or desc to sortPatientByAge");
-                                        String sortByAge = new Scanner(System.in).nextLine();
-
-                                        System.out.println(patientService.sortPatientsByAge(sortByAge));
-                                    }
-                                    case 8 -> {
-                                        System.out.println("Going back to main");
-                                        exitFromPatient = true;
-                                    }
-
-                                }
-                            }
-                            break;
-                        case 5:
-                            System.out.println("See you soon");
-                            return;
-                    }
-                    break;
                 }
+                            break;
+                                    case 4:
+                                        boolean exitFromPatient = false;
+                                        while (!exitFromPatient) {
+                                            System.out.println("""
+                                                    1.Add patient by id hospital to hospital
+                                                    2.Remove the patient inside the hospital, with the id of the patient 
+                                                    3.Update the patient inside the hospital, with the id of the patient
+                                                    4.add Patients by id hospital To Hospital
+                                                    5.get Patient By Id
+                                                    6.get Patient By Age
+                                                    7.sort Patients By Age
+                                                    8.Exit""");
 
-        } catch (Exception e) {
-            System.out.println("Write correct: ");
+                                                switch (new Scanner(System.in).nextInt()) {
+                                                    case 1 -> {
+                                                        System.out.println("Write the id of the hospital: ");
+                                                        Long hospitalId = new Scanner(System.in).nextLong();
 
+                                                        System.out.println("Write the patient's first name: ");
+                                                        String firstName = new Scanner(System.in).nextLine();
+
+                                                        System.out.println("Write the patient's  last name: ");
+                                                        String lastName = new Scanner(System.in).nextLine();
+
+                                                        System.out.println("Write the patient's  MALE/FEMALE: ");
+                                                        String gender = new Scanner(System.in).nextLine();
+
+                                                        System.out.println("Write the patient's age: ");
+                                                        int patientAge = new Scanner(System.in).nextInt();
+
+                                                        if (gender.equalsIgnoreCase(Gender.MALE.name())) {
+                                                            gender = Gender.MALE.name();
+                                                        } else if (gender.equalsIgnoreCase(Gender.FEMALE.name())) {
+                                                            gender = Gender.FEMALE.name();
+                                                        } else {
+                                                            throw new MyException("The given " + gender + " is not correct");
+                                                        }
+
+                                                        Patient patient = new Patient(GeneratedId.genPatientId(), firstName, lastName, patientAge, gender);
+                                                        System.out.println(patientService.add(hospitalId, patient));
+                                                    }
+                                                    case 2 -> {
+                                                        System.out.println("Write the id of the patient: ");
+                                                        Long idPatient = new Scanner(System.in).nextLong();
+                                                        patientService.removeById(idPatient);
+                                                    }
+                                                    case 3 -> {
+                                                        System.out.println("Write the id of the patient: ");
+                                                        Long departmentId = new Scanner(System.in).nextLong();
+
+                                                        System.out.println("Write a new patient's first name: ");
+                                                        String doctorName = new Scanner(System.in).nextLine();
+
+                                                        System.out.println("Write a new patient's name: ");
+                                                        String doctorLastName = new Scanner(System.in).nextLine();
+
+                                                        System.out.println("Write a new patient's MALE/FEMALE: ");
+                                                        String gender = new Scanner(System.in).nextLine();
+
+                                                        System.out.println("Write a new patient's age: ");
+                                                        int age = new Scanner(System.in).nextInt();
+
+                                                        Patient patient = new Patient();
+
+                                                        patient.setId(departmentId);
+                                                        patient.setFirstName(doctorName);
+                                                        patient.setLastName(doctorLastName);
+                                                        patient.setGender(gender);
+                                                        patient.setAge(age);
+
+                                                        System.out.println(patientService.updateById(departmentId, patient));
+                                                    }
+                                                    case 4 -> {
+                                                        System.out.println("Write the id of the hospital: ");
+                                                        Long idHospital = new Scanner(System.in).nextLong();
+
+                                                        List<Patient> patients = new ArrayList<>();
+
+                                                        System.out.println("Enter the number of patients to add: ");
+                                                        int numOfPatients = new Scanner(System.in).nextInt();
+
+                                                        for (int i = 0; i < numOfPatients; i++) {
+                                                            System.out.println("Enter patient details(id,firstName,lastName,gender,patientAge) for patient: ");
+
+                                                            System.out.println("Write the patient's first name: " + (i + 1) + ":");
+                                                            String firstName = new Scanner(System.in).nextLine();
+
+                                                            System.out.println("Write the patient's  last name: " + (i + 1) + ":");
+                                                            String lastName = new Scanner(System.in).nextLine();
+
+                                                            System.out.println("Write the patient's  MALE/FEMALE: " + (i + 1) + ":");
+                                                            String gender = new Scanner(System.in).nextLine();
+
+                                                            System.out.println("Write the patient's age: " + (i + 1) + ":");
+                                                            int patientAge = new Scanner(System.in).nextInt();
+
+                                                            if (gender.equalsIgnoreCase(Gender.MALE.name())) {
+                                                                gender = Gender.MALE.name();
+                                                            } else if (gender.equalsIgnoreCase(Gender.FEMALE.name())) {
+                                                                gender = Gender.FEMALE.name();
+                                                            }else{
+                                                                throw new MyException("Write MALE/FEMALE: ");
+                                                            }
+                                                            patients.add(new Patient(GeneratedId.genPatientId(), firstName, lastName, patientAge, gender));
+                                                        }
+
+                                                        String result = patientService.addPatientsToHospital(idHospital, patients);
+                                                        System.out.println(result);
+                                                    }
+                                                    case 5 -> {
+                                                        System.out.println("Write patient's id");
+                                                        Long id = new Scanner(System.in).nextLong();
+
+                                                        System.out.println(patientService.getPatientById(id));
+                                                    }
+                                                    case 6 -> {
+                                                        System.out.println("Write patient's age: ");
+                                                        int age = new Scanner(System.in).nextInt();
+                                                        System.out.println(patientService.getPatientByAge(age));
+                                                    }
+                                                    case 7 -> {
+                                                        System.out.println("Write the asc or desc to sortPatientByAge");
+                                                        String sortByAge = new Scanner(System.in).nextLine();
+
+                                                        System.out.println(patientService.sortPatientsByAge(sortByAge));
+                                                    }
+                                                    case 8 -> {
+                                                        System.out.println("Going back to main");
+                                                        exitFromPatient = true;
+                                                    }
+
+                                                }
+                                            }
+                                        break;
+                                    case 5:
+                                        System.out.println("See you soon");
+                                        return;
+                                }
+                                     break;
+                        }
+            } catch (Exception e) {
+                System.out.println("Write correct:");
+            }
         }
     }
-}
 }
