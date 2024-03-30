@@ -4,113 +4,106 @@ import Dao.DepartmentDao;
 import Database.DataBase;
 import exceptions.MyException;
 import model.Department;
-import model.Doctor;
 import model.Hospital;
-import service.GenericService;
+import service.HospitalService;
 
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DepartmentDaoImpl implements DepartmentDao<Department> {
     @Override
     public List<Department> getAllDepartmentByHospital(Long id) {
-        for (Hospital hospital : DataBase.hospitals) {
-            try {
-                if (hospital.getId().equals(id)) {
-                    return hospital.getDepartments();
-                } else {
-                    throw new MyException("The department " + id + " not found\nTry again");
-                }
-            } catch (MyException e) {
-                System.out.println(e.getMessage());
-            }
+        try {
+            return DataBase.hospitals.stream()
+                    .filter(hospital -> hospital.getId().equals(id))
+                    .flatMap(hospital -> hospital.getDepartments().stream())
+                    .collect(Collectors.toList());
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+            return new ArrayList<>();
         }
-        return null;
+
     }
 
     @Override
     public Department findDepartmentByName(String name) {
-        try {
-            for (Hospital hospital : DataBase.hospitals) {
-                for (Department department : hospital.getDepartments()) {
-                    if (department.getDepartmentName().equals(name)) {
-                        return department;
+        Optional<Department> department = DataBase.hospitals.stream()
+                .flatMap(hospital -> {
+                    if (hospital.getDepartments() != null) {
+                        return hospital.getDepartments().stream();
                     }
-                }
-            }
-            throw new MyException("The given name " + name + " is not correct\nTry again");
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
+                    return Stream.empty();
+                })
+                .filter(department1 -> department1.getDepartmentName().equals(name))
+                .findFirst();
+        return department.orElse(null);
     }
 
     @Override
     public String add(Long hospitalId, Department department) {
-        try {
-            for (Hospital hospital : new ArrayList<>(DataBase.hospitals)) {
-                if (hospital.getId().equals(hospitalId)) {
-                    List<Department> departments = hospital.getDepartments();
-                    if (departments == null) {
-                        departments = new ArrayList<>();
-                        hospital.setDepartments(departments);
-                    }
-                    departments.add(department);
-                    return "Department added successfully " + departments;
-                }
+        Optional<Hospital> optionalHospital = DataBase.hospitals.stream()
+                .filter(hospital -> hospital.getId().equals(hospitalId))
+                .findFirst();
+
+        if (optionalHospital.isPresent()) {
+            Hospital hospital = optionalHospital.get();
+
+            if (hospital.getDepartments() == null) {
+                hospital.setDepartments(new ArrayList<>());
             }
-            throw new MyException("The department not found\nTry again");
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
+
+            hospital.getDepartments().add(department);
+            return "Successfully added to hospital with id " + hospitalId;
+        } else {
+            throw new NullPointerException("The given hospitalId " + hospitalId + " is not correct");
         }
-        return "";
     }
 
     @Override
     public void removeById(Long id) {
-        try {
-            for (Hospital hospital : DataBase.hospitals) {
-                Iterator<Department> iterator = hospital.getDepartments().iterator();
-                while (iterator.hasNext()) {
-                    Department department = iterator.next();
-                    if (department.getId().equals(id)) {
-                        iterator.remove();
-                        System.out.println("Department with ID " + id + " removed from hospital " + hospital.getId());
-                        break;
-
+        Optional<Hospital> optionalHospital = DataBase.hospitals.stream()
+                .filter(hospital -> {
+                    if (hospital.getDepartments() != null) {
+                        return hospital.getDepartments().stream().anyMatch(department -> department.getId().equals(id));
                     }
+                    return false;
+                })
+                .findFirst();
+
+        optionalHospital.ifPresent(hospital -> {
+            try {
+                if (hospital.getDepartments() != null) {
+                    hospital.getDepartments().removeIf(department -> department.getId().equals(id));
                 }
+            } catch (Exception e) {
+                throw new RuntimeException("The given " + id + " is not correct");
             }
-            throw new MyException("The department " + id + " not found\nTry again");
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
-        }
+        });
     }
 
     @Override
     public String updateById(Long id, Department department) {
-        boolean departmentFound = false;
-        try {
-            for (Hospital hospital : DataBase.hospitals) {
-                for (Department department1 : hospital.getDepartments()) {
-                    if (department1.getId().equals(id)) {
-                        department1.setDepartmentName(department.getDepartmentName());
-                        departmentFound = true;
-                        break;
+        Optional<Department> optionalDepartment = DataBase.hospitals.stream()
+                .flatMap(hospital -> {
+                    if (hospital.getDepartments() != null) {
+                        return hospital.getDepartments().stream();
                     }
-                }
-                if (departmentFound) {
-                    break;
-                }
-            }
-            if (!departmentFound) {
-                throw new MyException("The hospital " + id + " not found\nTry again");
-            }
-            return " Changed successfully";
-        } catch (MyException e) {
-            return e.getMessage();
+                    return Stream.empty();
+                })
+                .filter(department1 -> department1.getId().equals(id))
+                .findFirst();
+        if (optionalDepartment.isPresent()) {
+
+            Department existingDepartment = optionalDepartment.get();
+            existingDepartment.setDepartmentName(department.getDepartmentName());
+
+            return "Department with id " + id + " has been successfully updated.";
+        } else {
+            return " Department with id " + id + " not found";
         }
     }
 }

@@ -12,103 +12,101 @@ import javax.print.Doc;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 public class DoctorDaoImpl implements DoctorDao<Doctor> {
     @Override
     public Doctor findDoctorById(Long id) {
         try {
-            for (Hospital hospital : DataBase.hospitals) {
-                for (Doctor doctor : hospital.getDoctors()) {
-                    if (doctor.getId().equals(id)) {
-                        return doctor;
-                    }
-                }
-            }
-            throw new MyException("The given " + id + " is not correct\nTry again");
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
-    }
+            Optional<Doctor> optionalDoctor = DataBase.hospitals.stream()
+                    .flatMap(hospital -> hospital.getDoctors().stream())
+                    .filter(doctor -> doctor.getId().equals(id))
+                    .findFirst();
 
+            return optionalDoctor.orElseThrow(() -> new IllegalArgumentException("Doctor with id " + id + " not found."));
+        } catch (Exception e) {
+            return null;
+        }
+    }
     @Override
     public String assignDoctorToDepartment(Long departmentId, List<Long> doctorsId) {
         try {
-            for (Hospital hospital : DataBase.hospitals) {
-                for (Department department : hospital.getDepartments()) {
-                    if (department.getId().equals(departmentId)) {
-                        for (Long doctorId : doctorsId) {
-                            for (Doctor doctor : hospital.getDoctors()) {
-                                if (doctor.getId().equals(doctorId)) {
-                                    if (department.getDoctors() == null) {
-                                        department.setDoctors(new ArrayList<>());
-                                    }
-                                    department.getDoctors().add(doctor);
-                                } else {
-                                    throw new MyException("The given doctor ID " + doctorId + " is not correct for department ID " + departmentId + "\nTry again");
-                                }
-                            }
-                        }
-                        return "Doctors assigned successfully to department";
-                    }
+            Optional<Department> optionalDepartment = DataBase.hospitals.stream()
+                    .flatMap(hospital -> hospital.getDepartments().stream())
+                    .filter(department -> department.getId().equals(departmentId))
+                    .findFirst();
+
+            if (optionalDepartment.isPresent()) {
+                Department department = optionalDepartment.get();
+
+                if (department.getDoctors() == null) {
+                    department.setDoctors(new ArrayList<>());
                 }
+
+                for (Long doctorId : doctorsId) {
+                    Optional<Doctor> optionalDoctor = DataBase.hospitals.stream()
+                            .flatMap(hospital -> hospital.getDoctors().stream())
+                            .filter(doctor -> doctor.getId().equals(doctorId))
+                            .findFirst();
+
+                    optionalDoctor.ifPresent(doctor -> department.getDoctors().add(doctor));
+                }
+
+                return "Doctors assigned to department successfully.";
+            } else {
+                throw new IllegalArgumentException("Department with id " + departmentId + " not found.");
             }
-            throw new MyException("The given department ID " + departmentId + " is not correct\nTry again");
-        } catch (MyException e) {
-            return e.getMessage();
+        } catch (Exception e) {
+            return "An error occurred while assigning doctors to department: " + e.getMessage();
         }
     }
 
+
     @Override
     public List<Doctor> getAllDoctorsByHospitalId(Long id) {
-        for (Hospital hospital : DataBase.hospitals) {
-            if (hospital.getId().equals(id)) {
-                return hospital.getDoctors();
-            } else {
-                System.out.println("Mistake:");
-            }
+        try {
+            return DataBase.hospitals.stream()
+                    .filter(hospital -> hospital.getId().equals(id))
+                    .findFirst()
+                    .map(Hospital::getDoctors)
+                    .orElse(new ArrayList<>());
+        } catch (Exception e) {
+            return new ArrayList<>();
         }
-        return null;
     }
 
 
     @Override
     public List<Doctor> getAllDoctorsByDepartmentId(Long id) {
         try {
-            for (Hospital hospital : DataBase.hospitals) {
-                for (Department department : hospital.getDepartments()) {
-                    if (department.getId().equals(id)) {
-                        return department.getDoctors();
-                    }
-                }
-            }
-            throw new MyException("The given " + id + " is not correct\nTry again");
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
-    }
+            Optional<Department> optionalDepartment = DataBase.hospitals.stream()
+                    .flatMap(hospital -> hospital.getDepartments().stream())
+                    .filter(department -> department.getId().equals(id))
+                    .findFirst();
 
+            return optionalDepartment.map(Department::getDoctors).orElse(new ArrayList<>());
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
     @Override
     public String add(Long hospitalId, Doctor doctor) {
-        try {
-            for (Hospital hospital : new ArrayList<>(DataBase.hospitals)) {
-                if (hospital.getId().equals(hospitalId)) {
-                    List<Doctor> hospitals = hospital.getDoctors();
-                    if (hospitals == null) {
-                        hospitals = new ArrayList<>();
-                        hospital.setDoctors(hospitals);
-                    }
-                    hospitals.add(doctor);
-                    return "Doctor added successfully " + hospitals;
-                }
-            }
-            throw new MyException("The  " + hospitalId + " not found\nTry again");
+        Optional<Hospital> optionalHospital = DataBase.hospitals.stream()
+                .filter(hospital -> hospital.getId().equals(hospitalId))
+                .findFirst();
 
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
+        if (optionalHospital.isPresent()) {
+            Hospital hospital = optionalHospital.get();
+
+            if (hospital.getDoctors() == null) {
+                hospital.setDoctors(new ArrayList<>());
+            }
+
+            hospital.getDoctors().add(doctor);
+            return "Successfully added to hospital with id " + hospitalId;
+        } else {
+            throw new RuntimeException("The given hospitalId " + hospitalId + " is not correct");
         }
-        return "";
     }
 
 
@@ -116,48 +114,42 @@ public class DoctorDaoImpl implements DoctorDao<Doctor> {
     public void removeById(Long id) {
         try {
             for (Hospital hospital : DataBase.hospitals) {
-                Iterator<Doctor> iterator = hospital.getDoctors().iterator();
-                while (iterator.hasNext()) {
-                    Doctor doctor = iterator.next();
-                    if (doctor.getId().equals(id)) {
-                        iterator.remove();
-                        System.out.println("Doctor with ID " + id + " removed from hospital " + hospital.getId());
-                        break;
-                    } else {
-                        throw new MyException("The Doctor " + id + " not found\nTry again");
-                    }
+                List<Doctor> doctors = hospital.getDoctors();
+                if (doctors != null) {
+                    doctors.removeIf(doctor -> doctor.getId().equals(id));
                 }
             }
-        } catch (MyException e) {
-            System.out.println(e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("An error occurred while removing doctor with id " + id);
         }
     }
-
     @Override
     public String updateById(Long id, Doctor doctor) {
-        boolean doctorFound = false;
         try {
-            for (Hospital hospital : DataBase.hospitals) {
-                for (Doctor doctor1 : hospital.getDoctors()) {
-                    if (doctor1.getId().equals(id)) {
-                        doctor1.setFirstName(doctor.getFirstName());
-                        doctor1.setLastName(doctor.getLastName());
-                        doctor1.setGender(doctor.getGender());
-                        doctor1.setExperienceYear(doctor.getExperienceYear());
-                        doctorFound = true;
-                        break;
-                    }
-                }
-                if (doctorFound) {
-                    break;
-                }
+            Optional<Hospital> optionalHospital = DataBase.hospitals.stream()
+                    .filter(hospital -> hospital.getDoctors().stream().anyMatch(doctor1 -> doctor1.getId().equals(id)))
+                    .findFirst();
+
+            if (optionalHospital.isPresent()) {
+                Hospital hospital = optionalHospital.get();
+
+                hospital.getDoctors().stream()
+                        .filter(doctor1 -> doctor1.getId().equals(id))
+                        .findFirst()
+                        .ifPresent(existingDoctor -> {
+                            existingDoctor.setId(doctor.getId());
+                            existingDoctor.setFirstName(doctor.getFirstName());
+                            existingDoctor.setLastName(doctor.getLastName());
+                            existingDoctor.setGender(doctor.getGender());
+                            existingDoctor.setExperienceYear(doctor.getExperienceYear());
+                        });
+
+                return "Doctor with id " + id + " has been successfully updated.";
+            } else {
+                throw new IllegalArgumentException("Doctor with id " + id + " not found.");
             }
-            if (!doctorFound) {
-                throw new MyException("The hospital " + id + " not found\nTry again");
-            }
-            return " Changed successfully";
-        } catch (MyException e) {
-            return e.getMessage();
+        } catch (Exception e) {
+            return "An error occurred while updating doctor with id " + id + ": " + e.getMessage();
         }
     }
 }
